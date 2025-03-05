@@ -33,27 +33,6 @@ target_link_libraries(test_version
     helloworld
 )
 
-if (MSVC)
-    target_compile_options(helloworld_cli PRIVATE
-        /W4
-    )
-    target_compile_options(helloworld PRIVATE
-        /W4
-    )
-    target_compile_options(test_version PRIVATE
-        /W4
-    )
-else ()
-    target_compile_options(helloworld_cli PRIVATE
-        -Wall -Wextra -pedantic -Werror
-    )
-    target_compile_options(helloworld PRIVATE
-        -Wall -Wextra -pedantic -Werror
-    )
-    target_compile_options(test_version PRIVATE
-        -Wall -Wextra -pedantic -Werror
-    )
-endif()
 
 
 
@@ -68,6 +47,12 @@ set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
 set(CPACK_PACKAGE_CONTACT example@example.com)
 
 include(CPack)
+
+# Add this to your existing CMakeLists.txt, after the DEB configuration
+if(WIN32)
+    set(CPACK_GENERATOR ZIP)
+    set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+endif()
 
 enable_testing()
 

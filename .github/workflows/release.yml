@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -21,6 +21,41 @@ jobs:
       - run: cmake --build .
       - run: cmake --build . --target test
       - run: cmake --build . --target package
+      - name: Upload Linux package
+        uses: actions/upload-artifact@v2
+        with:
+          name: linux-package
+          path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
+          
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Install Boost
+        run: choco install boost-msvc-14.2 -y
+      - name: Configure CMake
+        run: cmake . -DPATCH_VERSION=${{ github.run_number }} -DBOOST_ROOT="$env:BOOST_ROOT_1_82_0"
+      - name: Build
+        run: cmake --build . --config Release
+      - name: Test
+        run: cmake --build . --target RUN_TESTS --config Release
+      - name: Package
+        run: cmake --build . --target package --config Release
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows-package
+          path: ./helloworld-0.0.${{ github.run_number }}-win64.zip
+          
+  create-release:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v2
+        
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -31,13 +66,23 @@ jobs:
           release_name: Release ${{ github.run_number }}
           draft: false
           prerelease: false
-      - name: Upload Release Asset
-        id: upload-release-asset
+          
+      - name: Upload Linux Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
+          asset_path: ./linux-package/helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/vnd.debian.binary-package
+          
+      - name: Upload Windows Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./windows-package/helloworld-0.0.${{ github.run_number }}-win64.zip
+          asset_name: helloworld-0.0.${{ github.run_number }}-win64.zip
+          asset_content_type: application/zip
