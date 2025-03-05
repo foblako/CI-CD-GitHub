@@ -22,7 +22,7 @@ jobs:
       - run: cmake --build . --target test
       - run: cmake --build . --target package
       - name: Upload Linux package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: linux-package
           path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
@@ -44,7 +44,7 @@ jobs:
       - name: Package
         run: cmake --build . --target package --config Release
       - name: Upload Windows package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-package
           path: ./helloworld-0.0.${{ github.run_number }}-win64.zip
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         
       - name: Create Release
         id: create_release
